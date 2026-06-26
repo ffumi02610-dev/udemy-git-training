@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="メモ">
+  <title>メモアプリ</title>
+  <style>
+    /* 目に優しいライトグリーン/ライトブルー系のデザイン */
+    :root {
+      --bg-color: #f0fdf4; /* 非常に薄い緑 */
+      --primary-color: #10b981; /* エメラルドグリーン */
+      --primary-hover: #059669;
+      --text-color: #1f2937; /* 濃いグレー（黒の代わり） */
+      --border-color: #a7f3d0;
+      --error-color: #ef4444;
+      --input-bg: #ffffff;
+      --btn-text: #ffffff;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100vh; /* ビューポート全体を使用 */
+      padding-bottom: 80px; /* ボトムボタン用の余白 */
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-weight: bold;
+      font-size: 14px;
+      color: var(--primary-hover);
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 16px; /* スマホでの自動ズーム防止 */
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: -4px; /* テキストエリアとの隙間調整 */
+    }
+
+    .tool-btn {
+      background-color: #e0f2fe; /* 薄い青 */
+      color: #0369a1; /* 濃い青 */
+      border: 1px solid #bae6fd;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .tool-btn:active {
+      background-color: #bae6fd;
+    }
+
+    textarea {
+      flex-grow: 1; /* 残りの高さをすべて占有 */
+      min-height: 200px;
+      resize: none;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px;
+      background: linear-gradient(to top, var(--bg-color) 80%, transparent);
+      display: flex;
+      justify-content: center;
+      max-width: 600px;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: var(--btn-text);
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .submit-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .submit-btn:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .message {
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      min-height: 20px;
+      margin-top: -8px;
+    }
+    
+    .message.error {
+      color: var(--error-color);
+    }
+
+    .message.success {
+      color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="message" id="messageArea"></div>
+
+    <div class="form-group">
+      <label for="title">タイトル <span style="color:red">*</span></label>
+      <input type="text" id="title" placeholder="タイトルを入力...">
+    </div>
+
+    <div class="form-group">
+      <label for="date">日付 <span style="color:red">*</span></label>
+      <input type="date" id="date">
+    </div>
+
+    <div class="form-group">
+      <label for="tags">タグ</label>
+      <input type="text" id="tags" placeholder="タグ1 タグ2 (カンマ、句読点、スペース区切り)">
+    </div>
+
+    <div class="form-group" style="flex-grow: 1; display: flex; flex-direction: column;">
+      <div class="toolbar">
+        <button type="button" class="tool-btn" id="linkBtn">[[]]</button>
+      </div>
+      <textarea id="content" placeholder="メモや日記を入力..."></textarea>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button type="button" class="submit-btn" id="submitBtn">保存する</button>
+  </div>
+
+  <script>
+    // 初期化処理
+    document.addEventListener('DOMContentLoaded', () => {
+      // 日付の初期値を今日に設定
+      const dateInput = document.getElementById('date');
+      const today = new Date();
+      // YYYY-MM-DD 形式にフォーマット (ローカルタイムゾーン)
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      dateInput.value = `${year}-${month}-${day}`;
+    });
+
+    // リンク化ボタンの処理
+    const linkBtn = document.getElementById('linkBtn');
+    const contentTextarea = document.getElementById('content');
+
+    linkBtn.addEventListener('click', () => {
+      const start = contentTextarea.selectionStart;
+      const end = contentTextarea.selectionEnd;
+      const text = contentTextarea.value;
+      
+      const before = text.substring(0, start);
+      const selected = text.substring(start, end);
+      const after = text.substring(end, text.length);
+
+      contentTextarea.value = `${before}[[${selected}]]${after}`;
+      
+      // カーソル位置を復元 (テキストが選択されていなかった場合は、カッコの中にカーソルを置く)
+      contentTextarea.focus();
+      if (start === end) {
+        contentTextarea.selectionStart = start + 2;
+        contentTextarea.selectionEnd = start + 2;
+      } else {
+        contentTextarea.selectionStart = start;
+        contentTextarea.selectionEnd = start + selected.length + 4;
+      }
+    });
+
+    // 保存処理
+    const submitBtn = document.getElementById('submitBtn');
+    const messageArea = document.getElementById('messageArea');
+
+    submitBtn.addEventListener('click', () => {
+      const title = document.getElementById('title').value;
+      const date = document.getElementById('date').value;
+      const tags = document.getElementById('tags').value;
+      const content = contentTextarea.value;
+
+      // バリデーション
+      if (!title || !date || !content) {
+        showMessage('必須項目（タイトル、日付、メモ本文）を入力してください。', 'error');
+        return;
+      }
+
+      // 送信中の状態にする
+      submitBtn.disabled = true;
+      submitBtn.textContent = '保存中...';
+      showMessage('', ''); // メッセージクリア
+
+      const data = { title, date, tags, content };
+
+      // GASのバックエンド関数を呼び出し
+      google.script.run
+        .withSuccessHandler((response) => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '保存する';
+          showMessage('保存しました！', 'success');
+          
+          // フォームリセット (日付は保持)
+          document.getElementById('title').value = '';
+          document.getElementById('tags').value = '';
+          contentTextarea.value = '';
+          
+          // 数秒後にメッセージを消す
+          setTimeout(() => showMessage('', ''), 3000);
+        })
+        .withFailureHandler((error) => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '保存する';
+          showMessage(`エラーが発生しました: ${error.message}`, 'error');
+        })
+        .saveMemo(data);
+    });
+
+    function showMessage(msg, type) {
+      messageArea.textContent = msg;
+      messageArea.className = `message ${type}`;
+    }
+  </script>
+</body>
+</html>
