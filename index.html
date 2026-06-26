@@ -54,6 +54,7 @@
 
     input[type="text"],
     input[type="date"],
+    select,
     textarea {
       width: 100%;
       box-sizing: border-box;
@@ -66,7 +67,7 @@
       transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    input:focus, textarea:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--primary-color);
       box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
@@ -162,6 +163,15 @@
     <div class="message" id="messageArea"></div>
 
     <div class="form-group">
+      <label for="target">保存先 <span style="color:red">*</span></label>
+      <select id="target">
+        <? for (let i = 0; i < targetOptions.length; i++) { ?>
+          <option value="<?= targetOptions[i].value ?>"><?= targetOptions[i].label ?></option>
+        <? } ?>
+      </select>
+    </div>
+
+    <div class="form-group">
       <label for="title">タイトル <span style="color:red">*</span></label>
       <input type="text" id="title" placeholder="タイトルを入力...">
     </div>
@@ -174,6 +184,11 @@
     <div class="form-group">
       <label for="tags">タグ</label>
       <input type="text" id="tags" placeholder="タグ1 タグ2 (カンマ、句読点、スペース区切り)">
+    </div>
+
+    <div class="form-group">
+      <label for="source">引用元</label>
+      <input type="text" id="source" placeholder="URLやメールの件名など">
     </div>
 
     <div class="form-group" style="flex-grow: 1; display: flex; flex-direction: column;">
@@ -232,9 +247,11 @@
     const messageArea = document.getElementById('messageArea');
 
     submitBtn.addEventListener('click', () => {
+      const target = document.getElementById('target').value;
       const title = document.getElementById('title').value;
       const date = document.getElementById('date').value;
       const tags = document.getElementById('tags').value;
+      const source = document.getElementById('source').value;
       const content = contentTextarea.value;
 
       // バリデーション
@@ -248,7 +265,7 @@
       submitBtn.textContent = '保存中...';
       showMessage('', ''); // メッセージクリア
 
-      const data = { title, date, tags, content };
+      const data = { target, title, date, tags, source, content };
 
       // GASのバックエンド関数を呼び出し
       google.script.run
@@ -257,9 +274,10 @@
           submitBtn.textContent = '保存する';
           showMessage('保存しました！', 'success');
           
-          // フォームリセット (日付は保持)
+          // フォームリセット (保存先と日付は保持)
           document.getElementById('title').value = '';
           document.getElementById('tags').value = '';
+          document.getElementById('source').value = '';
           contentTextarea.value = '';
           
           // 数秒後にメッセージを消す
